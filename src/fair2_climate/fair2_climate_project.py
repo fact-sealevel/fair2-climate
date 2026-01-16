@@ -1,21 +1,38 @@
-import os
 import sys
 import argparse
-import pickle
 import numpy as np
 import pandas as pd
 from datetime import datetime
 import xarray as xr
-from fill_from_rcmip import fill_from_rcmip
-from fill_from import *
+from fair2_climate.fill_from_rcmip import fill_from_rcmip
+from fair2_climate.fill_from import fill_from_csv
 
 # Function that prepares the RCMIP emissions data
 def prep_rcmip_emissions_conc(scenario, rcmip_file):
 	pass
 
 
-def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, calibration_file, species_config_file, volcanic_erf, solar_erf, reference_year, pipeline_id, nsamps,cyear_start, cyear_end,
-						  pyear_start,pyear_end,smooth_win,seed):
+def fair2_project_climate(scenario,
+						  rcmip_concentration_file,
+						  rcmip_forcing_file, 
+						  rcmip_emissions_file,
+						  calibration_file, 
+						  species_config_file, 
+						  volcanic_erf, 
+						  solar_erf, 
+						  reference_year, 
+						  pipeline_id, 
+						  nsamps,
+						  cyear_start, 
+						  cyear_end,
+						  pyear_start,
+						  pyear_end,
+						  smooth_win,
+						  seed,
+						  output_climate_file,
+						  output_gsat_file,
+						  output_oceantemp_file,
+						  output_ohc_file):
 	
 	from fair import FAIR
 	from fair.interface import fill, initialise
@@ -32,8 +49,8 @@ def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, 
 	df_configs = pd.read_csv(calibration_file, index_col=0)
 	configs = df_configs.index  # this is used as a label for the "config" axis
 	f.define_configs(configs)
-	configs
-	df_configs.head()
+	#configs
+	#df_configs.head()
 
 	species, properties = read_properties(filename=species_config_file)
 	f.define_species(species, properties)
@@ -41,13 +58,19 @@ def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, 
 	f.allocate()
 
 	#f.fill_from_rcmip()
-	if rcmip_file=='./rcmip/rcmip-emissions-annual-means-v5-1-0.csv':
-		fill_from_rcmip(f, rcmip_file=rcmip_file)
-	else:
-		fill_from_csv(f,emissions_file=rcmip_file, concentration_file=concentration_file, forcing_file=forcing_file)
-	f.emissions
+	#if rcmip_file=='./rcmip/rcmip-emissions-annual-means-v5-1-0.csv':
+	fill_from_rcmip(f, 
+				 rcmip_emissions_file=rcmip_emissions_file,
+				 rcmip_concentration_file=rcmip_concentration_file,
+				 rcmip_forcing_file=rcmip_forcing_file)
+	#else:
+	#fill_from_csv(f,
+	#		   emissions_file=rcmip_emissions_file, 
+	#		   concentration_file=rcmip_concentration_file, 
+	#		   forcing_file=rcmip_forcing_file)
+	#f.emissions
 
-	df_emis = pd.read_csv(rcmip_file)
+	df_emis = pd.read_csv(rcmip_emissions_file)
 	gfed_sectors = [
     	"Emissions|NOx|MAGICC AFOLU|Agricultural Waste Burning",
     	"Emissions|NOx|MAGICC AFOLU|Forest Burning",
@@ -276,7 +299,7 @@ def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, 
    			 " Parameters obtained from: https://zenodo.org/records/8399112."),
    			"Method": (
    				"Temperature retunr from f = FAIR(ch4_method='Thornhill2021')."),
-   			"Scenario emissions file": rcmip_file,
+   			"Scenario emissions file": rcmip_emissions_file,
    			"FAIR Parameters file": calibration_file,
    			"FaIR version": '2.1.6',
    			 "Scenario": scenario,
@@ -302,9 +325,15 @@ def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, 
    	 	coords={"years": proj_years, "locations": [-1], "samples": np.arange(nsamps)}, attrs=attrs)
    
 		# Write the datasets to netCDF
-	tempds.to_netcdf("{}_gsat.nc".format(pipeline_id), encoding={"surface_temperature": {"dtype": "float32", "zlib": True, "complevel":4}})
-	deeptempds.to_netcdf("{}_oceantemp.nc".format(pipeline_id), encoding={"deep_ocean_temperature": {"dtype": "float32", "zlib": True, "complevel":4}})
-	ohcds.to_netcdf("{}_ohc.nc".format(pipeline_id), encoding={"ocean_heat_content": {"dtype": "float32", "zlib": True, "complevel":4}})
+	tempds.to_netcdf(output_gsat_file, 
+				  encoding={"surface_temperature": {"dtype": "float32", "zlib": True, "complevel":4}},
+				  engine='netcdf4')
+	deeptempds.to_netcdf(output_oceantemp_file, 
+					encoding={"deep_ocean_temperature": {"dtype": "float32", "zlib": True, "complevel":4}},
+					engine='netcdf4')
+	ohcds.to_netcdf(output_ohc_file, 
+				 encoding={"ocean_heat_content": {"dtype": "float32", "zlib": True, "complevel":4}},
+				 engine='netcdf4')
    
 		# create a single netCDF file that is compatible with modules expecting parameters organized in a certain fashion
 	pooledds = xr.Dataset({"surface_temperature": (("years","samples"), temps[::,::,0].transpose(), {"units":"degC"}),
@@ -312,12 +341,12 @@ def fair2_project_climate(scenario,rcmip_file, concentration_file,forcing_file, 
    							"ocean_heat_content": (("years","samples"), ohcs[::,::,0].transpose(), {"units":"J"})},
    	 	coords={"years": proj_years, "samples": np.arange(nsamps), "layers": [1,2]}, attrs=attrs)
 
-	pooledds.to_netcdf("{}_climate.nc".format(pipeline_id), group=scenario,encoding={"ocean_heat_content": {"dtype": "float32", "zlib": True, "complevel":4},
+	pooledds.to_netcdf(output_climate_file, group=scenario,encoding={"ocean_heat_content": {"dtype": "float32", "zlib": True, "complevel":4},
    	 	"surface_temperature": {"dtype": "float32", "zlib": True, "complevel":4},
    	 	"deep_ocean_temperature": {"dtype": "float32", "zlib": True, "complevel":4}})
 	yearsds = xr.Dataset({"year": proj_years})
     
-	yearsds.to_netcdf("{}_climate.nc".format(pipeline_id), mode='a')
+	yearsds.to_netcdf(output_climate_file, mode='a')
 	
 	return(None)
 
@@ -351,53 +380,3 @@ def Smooth(x, w=5):
 	return(y)
 
 
-if __name__ == "__main__":
-
-	# Initialize the command-line argument parser
-	parser = argparse.ArgumentParser(description="Run the preprocessing stage for the FAIR AR6 temperature module",\
-	epilog="Note: This is meant to be run as part of the Framework for the Assessment of Changes To Sea-level (FACTS)")
-
-	# Define the command line arguments to be expected
-	parser.add_argument('--pipeline_id', help="Unique identifier for this instance of the module", required=True)
-	parser.add_argument('--rcmip_file', help="Full path to RCMIP emissions file", default="./rcmip/rcmip-emissions-annual-means-v5-1-0.csv")
-	parser.add_argument('--concentration_file', help='Full path to concentration file', default="./rcmip/rcmip-concentrations-annual-means-v5-1-0.csv")
-	parser.add_argument('--forcing_file', help='Full path to forcing file', default="./rcmip/rcmip-radiative-forcing-annual-means-v5-1-0.csv")
-	parser.add_argument('--calibration_file', help="Full path to the climate calibration params file", default="./parameters/calibrated_constrained_parameters.csv")
-	parser.add_argument('--species_config_file', help="Full path to the species configuration file", default="./parameters/species_configs_properties_calibration1.2.0.csv")
-	parser.add_argument('--volcanic_erf', help='Full path to the Volcanic ERF timebounds file', default="./parameters/volcanic_ERF_1750-2101_timebounds.csv")
-	parser.add_argument('--solar_erf', help='Full path to the Solar ERF timebounds file', default="./parameters/solar_erf_timebounds.csv")
-	parser.add_argument('--scenario', help="SSP Emissions scenario",  default="ssp585")
-	parser.add_argument('--reference_year', help='Reference Year', default=1750)
-	parser.add_argument('--nsamps', help="Number of samples to create (uses replacement if nsamps > n parameters) (default=10)", type=int, default=10)
-	parser.add_argument('--seed', help="Seed value for random number generator (default=1234)", type=int, default=1234)
-	parser.add_argument('--cyear_start', help="Start year of temporal range for centering (default=1850)", type=int, default=1850)
-	parser.add_argument('--cyear_end', help="End year of temporal range for centering (default=1900)", type=int, default=1900)
-	parser.add_argument('--smooth_win', help="Number of years to use as a smoothing window (default=19)", type=int, default=19)
-	parser.add_argument('--pyear_start', help="Projection year start [default=2020]", default=2020, type=int)
-	parser.add_argument('--pyear_end', help="Projection year end [default=2100]", default=2100, type=int)
-
-	# Parse the arguments
-	args = parser.parse_args()
-
-	# Run the code
-	fair2_project_climate(
-		scenario=args.scenario, 
-		rcmip_file=args.rcmip_file, 
-		concentration_file=args.concentration_file,
-		forcing_file=args.forcing_file,
-		calibration_file=args.calibration_file, 
-		species_config_file=args.species_config_file,
-		volcanic_erf=args.volcanic_erf,
-		solar_erf=args.solar_erf,
-		pipeline_id=args.pipeline_id,
-		reference_year=args.reference_year,
-		nsamps=args.nsamps,
-		seed=args.seed,
-		cyear_start=args.cyear_start,
-		cyear_end=args.cyear_end,
-		smooth_win=args.smooth_win,
-		pyear_start=args.pyear_start,
-		pyear_end=args.pyear_end
-		)
-
-	sys.exit()

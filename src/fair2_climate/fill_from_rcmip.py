@@ -1,7 +1,7 @@
 import copy
 import os
 import warnings
-
+import logging 
 import numpy as np
 import pandas as pd
 import pooch
@@ -43,7 +43,13 @@ from fair.structure.units import (
     time_convert,
 )
 
-def fill_from_rcmip(self, rcmip_file=None):
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def fill_from_rcmip(self, 
+                    rcmip_emissions_file,
+                    rcmip_concentration_file,
+                    rcmip_forcing_file):
         """Fill emissions, concentrations and/or forcing from RCMIP scenarios."""
         # lookup converting FaIR default names to RCMIP names
         species_to_rcmip = {specie: specie.replace("-", "") for specie in self.species}
@@ -70,9 +76,9 @@ def fill_from_rcmip(self, rcmip_file=None):
                 del species_to_rcmip[specie]
 
         
-        rcmip_emissions_file=rcmip_file  
-        rcmip_concentration_file = './rcmip/rcmip-concentrations-annual-means-v5-1-0.csv'
-        rcmip_forcing_file = './rcmip/rcmip-radiative-forcing-annual-means-v5-1-0.csv'
+        rcmip_emissions_file=rcmip_emissions_file  
+        rcmip_concentration_file = rcmip_concentration_file
+        rcmip_forcing_file = rcmip_forcing_file
 
         df_emis = pd.read_csv(rcmip_emissions_file)
         df_conc = pd.read_csv(rcmip_concentration_file)
