@@ -10,20 +10,53 @@ First, create a new directory, download the required input data and prepare for 
 
 ```shell
 git clone --single-branch --branch package git@github.com:e-marshall/fair2-climate.git
-#eventually:
+#TODO eventually:
 #git clone git@github.com:fact-sealevel/fair2-climate.git
 
 # Make dir for input data
 mkdir -p ./data/input
 
 # Download input data
-# NOTE: Data using during dev isn't this because this doesn't include radiative forcing rcmip file
+# NOTE TODO: Data using during dev isn't this because this doesn't include radiative forcing rcmip file
 curl -sL https://zenodo.org/records/11506798/files/fair2_climate_project_data.tgz | tar -xvz 
 
 # Make dir for output data 
 mkdir -p ./data/output
 ```
+Then, create a Docker image: 
+(**TODO: don't need this once example can use container from container registry**)
+```shell
+docker build -t fair2-climate . 
+```
 
+Run the application in a conatiner based on the image:
+(**TODO: fix once container image builds in CICD**)
+```shell
+docker run --rm \
+-v ./data/input:/mnt/fair2_input_data:ro \
+-v ./data/output:/mnt/fair2_output_data \
+fair2-climate \
+--pipeline-id my_pipeline_id \
+--nsamps 50 \
+--rcmip-emissions-file "/mnt/fair2_input_data/rcmip/rcmip-emissions-annual-means-v5-1-0.csv" \
+--rcmip-concentration-file "/mnt/fair2_input_data/rcmip/rcmip-concentrations-annual-means-v5-1-0.csv" \
+--rcmip-forcing-file "/mnt/fair2_input_data/rcmip/rcmip-radiative-forcing-annual-means-v5-1-0.csv" \
+--calibration-file "/mnt/fair2_input_data/parameters/calibrated_constrained_parameters.csv" \
+--species-config-file "/mnt/fair2_input_data/parameters/species_configs_properties_calibration1.2.0.csv" \
+--volcanic-erf "/mnt/fair2_input_data/parameters/volcanic_ERF_1750-2101_timebounds.csv" \
+--solar-erf "/mnt/fair2_input_data/parameters/solar_erf_timebounds.csv" \
+--reference-year 1750 \
+--seed 1234 \
+--cyear-start 1850 \
+--cyear-end 1900 \
+--smooth-win 19 \
+--pyear-start 2020 \
+--pyear-end 2100 \
+--output-climate-file /mnt/fair2_output_data/climate.nc \
+--output-gsat-file /mnt/fair2_output_data/gsat.nc \
+--output-oceantemp-file /mnt/fair2_output_data/ocean_temp.nc \
+--output-ohc-file /mnt/fair2_output_data/ohc.nc
+```
 ## Features
 
 Several options and configurations are available when running the container:
