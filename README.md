@@ -114,7 +114,7 @@ docker run --rm ghcr.io/fact-sealevel/fair2-cliamte:latest --help
 You can build the container with Docker by cloning the repository locally and then running
 
 ```shell
-docker build -t fair2-climate:dev .
+docker build -t fair2-climate .
 ```
 
 from the repository root.
