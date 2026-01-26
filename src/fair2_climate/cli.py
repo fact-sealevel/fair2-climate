@@ -1,6 +1,5 @@
 import click
 from fair2_climate.fair2_climate_project import fair2_project_climate
-import fair
 
 
 @click.command()
@@ -161,10 +160,9 @@ def main(
     output_oceantemp_file,
     output_ohc_file,
 ):
-    """Command line interface for FAIR2 climate model module"""
+    """Command line interface for FAIR2 climate mo
+    del module"""
     click.echo("Hello from fair2-climate!")
-    message = f"fair version: {fair.__version__}"
-    click.echo(message)
     fair2_project_climate(
         pipeline_id=pipeline_id,
         rcmip_emissions_file=rcmip_emissions_file,
