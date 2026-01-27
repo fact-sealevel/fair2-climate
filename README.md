@@ -9,9 +9,7 @@ Containerized application of the fair2 [module](https://github.com/radical-colla
 First, create a new directory, download the required input data and prepare for the run:
 
 ```shell
-git clone --single-branch --branch package git@github.com:e-marshall/fair2-climate.git
-#TODO eventually:
-#git clone git@github.com:fact-sealevel/fair2-climate.git
+git clone git@github.com:fact-sealevel/fair2-climate.git
 
 # Make dir for input data
 mkdir -p ./data/input
@@ -22,19 +20,14 @@ curl -sL https://zenodo.org/records/18190680/files/fair2_climate_project_data.tg
 # Make dir for output data 
 mkdir -p ./data/output
 ```
-Then, create a Docker image: 
-(**TODO: don't need this once example can use container from container registry**)
-```shell
-docker build -t fair2-climate . 
-```
 
-Run the application in a conatiner based on the image:
-(**TODO: fix once container image builds in CICD**)
+Run the application in a container based on the image published in the container registry:
+
 ```shell
 docker run --rm \
 -v ./data/input:/mnt/fair2_input_data:ro \
 -v ./data/output:/mnt/fair2_output_data \
-fair2-climate \
+ghcr.io/fact-sealevel/fair2-climate:edge \
 --pipeline-id my_pipeline_id \
 --nsamps 50 \
 --rcmip-emissions-file "/mnt/fair2_input_data/rcmip/rcmip-emissions-annual-means-v5-1-0.csv" \
@@ -105,7 +98,6 @@ Options:
 
 See this help documentation by running:
 ```shell
-#(not yet)
 docker run --rm ghcr.io/fact-sealevel/fair2-cliamte:latest --help
 ```
 
