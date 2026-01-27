@@ -9,7 +9,7 @@ Containerized application of the fair2 [module](https://github.com/radical-colla
 First, create a new directory, download the required input data and prepare for the run:
 
 ```shell
-#git clone git@github.com:fact-sealevel/fair2-climate.git
+git clone git@github.com:fact-sealevel/fair2-climate.git
 
 # Make dir for input data
 mkdir -p ./data/input
