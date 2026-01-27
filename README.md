@@ -98,7 +98,7 @@ Options:
 
 See this help documentation by running:
 ```shell
-docker run --rm ghcr.io/fact-sealevel/fair2-cliamte:latest --help
+docker run --rm ghcr.io/fact-sealevel/fair2-climate:latest --help
 ```
 
 ## Building the container locally
