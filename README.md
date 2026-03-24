@@ -9,8 +9,6 @@ Containerized application of the fair2 [module](https://github.com/radical-colla
 First, create a new directory, download the required input data and prepare for the run:
 
 ```shell
-git clone git@github.com:fact-sealevel/fair2-climate.git
-
 # Make dir for input data
 mkdir -p ./data/input
 
@@ -27,7 +25,7 @@ Run the application in a container based on the image published in the container
 docker run --rm \
 -v ./data/input:/mnt/fair2_input_data:ro \
 -v ./data/output:/mnt/fair2_output_data \
-ghcr.io/fact-sealevel/fair2-climate:edge \
+ghcr.io/fact-sealevel/fair2-climate:latest \
 --pipeline-id my_pipeline_id \
 --nsamps 50 \
 --rcmip-emissions-file "/mnt/fair2_input_data/rcmip/rcmip-emissions-annual-means-v5-1-0.csv" \
